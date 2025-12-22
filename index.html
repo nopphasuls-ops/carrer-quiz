@@ -150,8 +150,13 @@ async function showResult() {
 
   const message = `🔮 ผลเกมแนะแนวของคุณ\n${r.title}\n\n${r.desc}`;
 
-  // ส่งผลเข้า LINE
-  await liff.sendMessages([{ type: "text", text: message }]);
+// ส่งผลเข้า LINE (เฉพาะตอนเปิดใน LINE เท่านั้น)
+if (liff.isInClient()) {
+  await liff.sendMessages([
+    { type: "text", text: message }
+  ]);
+}
+
 
   // ส่งผลเข้า Google Sheet
   fetch(SHEET_WEBAPP_URL, {
