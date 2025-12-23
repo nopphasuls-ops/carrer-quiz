@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>เกมทำนายสาขาที่ใช่</title>
 
+<!-- LIFF SDK -->
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
 <style>
@@ -16,34 +17,29 @@ html, body {
 body {
   font-family: "Segoe UI", sans-serif;
   background: #eef2f6;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
-/* Full screen card */
-.card {
-  width: 100%;
-  height: 100%;
-  background: #ffffff;
+/* Fullscreen container */
+#app {
+  min-height: 100vh;
   padding: 24px;
   box-sizing: border-box;
-  overflow-y: auto;
+  background: #ffffff;
 }
 
 /* Typography */
 h2 {
-  font-size: 30px;
+  font-size: 32px;
   margin-bottom: 16px;
 }
 h3 {
-  font-size: 24px;
+  font-size: 26px;
   margin-bottom: 12px;
 }
 p {
   font-size: 22px;
-  line-height: 1.5;
-  margin-bottom: 24px;
+  line-height: 1.6;
+  margin-bottom: 20px;
 }
 
 /* Buttons */
@@ -81,14 +77,12 @@ button:active {
 pre {
   white-space: pre-wrap;
   font-size: 20px;
-  line-height: 1.5;
-  text-align: left;
+  line-height: 1.6;
   background: #f7f9fb;
   padding: 16px;
   border-radius: 12px;
 }
 
-/* Result buttons group */
 .result-actions {
   margin-top: 24px;
 }
@@ -96,14 +90,13 @@ pre {
 </head>
 
 <body>
-<div class="card" id="app">กำลังโหลด...</div>
+<div id="app">กำลังโหลด…</div>
 
 <script>
 /* ================= CONFIG ================= */
 const LIFF_ID = "2008749179-1dKINV2m";
 const GOOGLE_FORM_URL = "https://forms.gle/RjcRYXiui6ccggZV6";
-const FACULTY_PAGE_URL = "https://www.facebook.com/FLAS.RERU"; // 🔗 แก้ได้
-const SHEET_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyNEdFivthNhhkYYvr6M-v1y5TFzYRH0CHOFOphcnmN0lMhDlLT_77rDLo5sRS4CWvw/exec";
+const FACULTY_PAGE_URL = "https://www.facebook.com/FLAS.RERU";
 /* ========================================= */
 
 let current = 0;
@@ -152,10 +145,10 @@ const results = {
   C: { title: "🤝 คุณคือสายเข้าใจคนและสังคม!",
        desc: "เหมาะกับสาขา:\n• การพัฒนาชุมชน\n• นิเทศศาสตร์และระบบสารสนเทศ" },
   D: { title: "🔬 คุณคือสายวิทย์ตัวจริง!",
-       desc: "เหมาะกับสาขา:\n• ครุศาสตร์ (ไฟฟ้า ฟิสิกส์ เคมี ชีววิทยา)\n• เกษตร\n• สัตวศาสตร์" }
+       desc: "เหมาะกับสาขา:\n• ครุศาสตร์\n• เกษตร\n• สัตวศาสตร์" }
 };
 
-/* ============== GAME LOGIC ============== */
+/* ============== GAME ============== */
 function renderQuestion() {
   const q = questions[current];
   let html = `<h3>ข้อที่ ${current + 1} จาก ${questions.length}</h3><p>${q.q}</p>`;
@@ -177,22 +170,15 @@ async function showResult() {
   const final = Object.keys(count).reduce((a,b)=>count[a]>count[b]?a:b);
   const r = results[final];
 
-  if (liff.isInClient()) {
-    await liff.sendMessages([{ type: "text", text:
-      `🔮 ผลเกมทำนายอาชีพอนาคตของคุณ\n${r.title}\n\n${r.desc}`
-    }]);
+  // ส่งข้อความเข้า LINE ถ้าอยู่ใน LINE
+  if (window.liff && liff.isInClient()) {
+    try {
+      await liff.sendMessages([{
+        type: "text",
+        text: `🔮 ผลเกมแนะแนวของคุณ\n${r.title}\n\n${r.desc}`
+      }]);
+    } catch(e){}
   }
-
-  fetch(SHEET_WEBAPP_URL, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify({
-      resultCode: final,
-      resultTitle: r.title,
-      resultDesc: r.desc,
-      answers: answers.join(",")
-    })
-  });
 
   document.getElementById("app").innerHTML = `
     <h2>${r.title}</h2>
@@ -220,39 +206,39 @@ function restart() {
 }
 
 function closeLIFF() {
-  if (liff.isInClient()) {
+  if (window.liff && liff.isInClient()) {
     liff.closeWindow();
   } else {
-    window.close();
+    window.history.back();
   }
 }
 
-<script>
-/* ===== LIFF INIT ===== */
+/* ============== INIT (NO LOADING HANG) ============== */
 async function initApp() {
+  // ✅ โหลดเกมก่อนเสมอ
+  renderQuestion();
+
+  // ❌ ถ้า LIFF ยังไม่พร้อม → ไม่รอ
+  if (!window.liff) return;
+
   try {
     await liff.init({ liffId: LIFF_ID });
-
-    if (liff.isInClient()) {
-      try { liff.expandWindow(); } catch(e){}
-    }
 
     if (!liff.isLoggedIn()) {
       liff.login();
       return;
     }
 
-  } catch (err) {
-    console.warn("LIFF init error", err);
-  }
+    if (liff.isInClient()) {
+      try { liff.expandWindow(); } catch(e){}
+    }
 
-  // ✅ โหลดเกมเสมอ
-  renderQuestion();
+  } catch (err) {
+    console.warn("LIFF error", err);
+  }
 }
 
-// ✅ เรียกแค่ครั้งเดียว
-initApp();
+window.onload = initApp;
 </script>
-
 </body>
 </html>
