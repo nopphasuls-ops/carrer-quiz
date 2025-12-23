@@ -3,138 +3,153 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
 <title>เกมทำนายสาขาที่ใช่</title>
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
 <style>
-:root {
-  --green: #1aa36f;
-  --light: #f5f7fa;
-  --dark: #1f2937;
-}
-
+/* ===== RESET ===== */
 * {
   box-sizing: border-box;
 }
-
 html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  font-family: "Segoe UI", "Prompt", sans-serif;
-  background: var(--light);
-  color: var(--dark);
+  font-family: "Segoe UI", sans-serif;
+  background: #f4f7fb;
 }
 
-/* ===== Layout ===== */
-#app {
-  min-height: 100vh;
+/* ===== LAYOUT ===== */
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.app {
+  width: 100%;
+  height: 100vh;
+  max-width: 480px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
   padding: 20px;
 }
 
-/* ===== Header ===== */
+/* ===== HEADER ===== */
 .header {
   text-align: center;
-  margin-bottom: 20px;
-}
-
-.header h1 {
-  font-size: 30px;
-  margin: 0 0 6px;
-}
-
-.progress {
-  font-size: 20px;
-  color: var(--green);
   margin-bottom: 10px;
 }
 
-/* ===== Question ===== */
-.question {
-  font-size: 28px;
-  font-weight: 700;
-  margin-bottom: 24px;
+.header h2 {
+  font-size: 26px;
+  margin: 0;
 }
 
-/* ===== Buttons ===== */
-.option-btn {
+.progress {
+  font-size: 18px;
+  color: #555;
+  margin-top: 6px;
+}
+
+/* ===== QUESTION AREA ===== */
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.question {
+  font-size: 26px;
+  text-align: center;
+  margin-bottom: 30px;
+  line-height: 1.4;
+}
+
+/* ===== BUTTONS ===== */
+button {
   width: 100%;
   padding: 20px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   font-size: 22px;
   font-weight: 600;
   border-radius: 16px;
   border: none;
-  background: var(--green);
+  background: #4CAF50;
   color: #fff;
   cursor: pointer;
 }
 
-.option-btn:active {
-  transform: scale(0.98);
+button:active {
+  transform: scale(0.97);
 }
 
-.secondary {
-  background: #607d8b;
+button.secondary {
+  background: #607D8B;
 }
 
-.outline {
-  background: #ffffff;
-  color: var(--green);
-  border: 2px solid var(--green);
+button.outline {
+  background: #fff;
+  color: #4CAF50;
+  border: 3px solid #4CAF50;
 }
 
-.danger {
-  background: #e53935;
+button.danger {
+  background: #f44336;
 }
 
-/* ===== Result ===== */
+/* ===== RESULT ===== */
 .result-title {
-  font-size: 32px;
-  font-weight: 800;
-  margin-bottom: 16px;
+  font-size: 30px;
+  text-align: center;
+  margin-bottom: 20px;
 }
 
 .result-desc {
   font-size: 22px;
-  line-height: 1.6;
-  background: #ffffff;
+  background: #f7f9fb;
   padding: 20px;
-  border-radius: 18px;
-  margin-bottom: 24px;
+  border-radius: 16px;
+  line-height: 1.6;
   white-space: pre-wrap;
 }
 
-.actions button {
-  margin-bottom: 14px;
+/* ===== ACTIONS ===== */
+.actions {
+  margin-top: 24px;
 }
 
-/* ===== Loading ===== */
-.loading {
-  font-size: 24px;
-  text-align: center;
-  margin-top: 40px;
+/* ===== RESPONSIVE ===== */
+@media (min-height: 700px) {
+  .question {
+    font-size: 30px;
+  }
+  button {
+    font-size: 24px;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<div id="app" class="loading">กำลังโหลด...</div>
+<div class="app" id="app">กำลังโหลด...</div>
 
 <script>
-/* ================= CONFIG ================= */
+/* ===== CONFIG ===== */
 const LIFF_ID = "2008749179-1dKINV2m";
 const GOOGLE_FORM_URL = "https://forms.gle/RjcRYXiui6ccggZV6";
 const FACULTY_PAGE_URL = "https://www.facebook.com/FLAS.RERU";
-/* ========================================= */
+const SHEET_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyNEdFivthNhhkYYvr6M-v1y5TFzYRH0CHOFOphcnmN0lMhDlLT_77rDLo5sRS4CWvw/exec";
 
+/* ===== STATE ===== */
 let current = 0;
 let answers = [];
 
-/* ============== QUESTIONS ============== */
+/* ===== QUESTIONS ===== */
 const questions = [
   { q: "เวลาว่างคุณชอบทำอะไร?", opts: [
     ["ออกกำลังกาย ดูแลสุขภาพ", "A"],
@@ -168,34 +183,29 @@ const questions = [
   ]}
 ];
 
-/* ============== RESULTS ============== */
+/* ===== RESULTS ===== */
 const results = {
-  A: { title: "💪 คุณคือสายสุขภาพตัวจริง!",
-       desc: "เหมาะกับสาขา:\n• วิทยาศาสตร์การกีฬา\n• สาธารณสุขชุมชน\n• วิทยาศาสตร์การแพทย์" },
-  B: { title: "🌍 คุณคือสายสื่อสารระดับอินเตอร์!",
-       desc: "เหมาะกับสาขา:\n• ภาษาอังกฤษ\n• ภาษาจีน" },
-  C: { title: "🤝 คุณคือสายเข้าใจคนและสังคม!",
-       desc: "เหมาะกับสาขา:\n• การพัฒนาชุมชน\n• นิเทศศาสตร์และระบบสารสนเทศ" },
-  D: { title: "🔬 คุณคือสายวิทย์ตัวจริง!",
-       desc: "เหมาะกับสาขา:\n• ครุศาสตร์ (ไฟฟ้า ฟิสิกส์ เคมี ชีววิทยา)\n• เกษตร\n• สัตวศาสตร์" }
+  A: { title: "💪 สายสุขภาพ", desc: "เหมาะกับ:\n• วิทยาศาสตร์การกีฬา\n• สาธารณสุข\n• วิทยาศาสตร์การแพทย์" },
+  B: { title: "🌍 สายภาษา", desc: "เหมาะกับ:\n• ภาษาอังกฤษ\n• ภาษาจีน" },
+  C: { title: "🤝 สายสังคม", desc: "เหมาะกับ:\n• พัฒนาชุมชน\n• นิเทศศาสตร์" },
+  D: { title: "🔬 สายวิทย์", desc: "เหมาะกับ:\n• ครุศาสตร์\n• เกษตร\n• สัตวศาสตร์" }
 };
 
-/* ============== GAME LOGIC ============== */
+/* ===== RENDER ===== */
 function renderQuestion() {
   const q = questions[current];
-
   let html = `
     <div class="header">
-      <div class="progress">ข้อที่ ${current + 1} / ${questions.length}</div>
+      <h2>เกมทำนายสาขาที่ใช่</h2>
+      <div class="progress">ข้อที่ ${current + 1} จาก ${questions.length}</div>
     </div>
-
-    <div class="question">${q.q}</div>
+    <div class="content">
+      <div class="question">${q.q}</div>
+      ${q.opts.map(o =>
+        `<button onclick="answer('${o[1]}')">${o[0]}</button>`
+      ).join("")}
+    </div>
   `;
-
-  q.opts.forEach(o => {
-    html += `<button class="option-btn" onclick="answer('${o[1]}')">${o[0]}</button>`;
-  });
-
   document.getElementById("app").innerHTML = html;
 }
 
@@ -205,34 +215,34 @@ function answer(type) {
   current < questions.length ? renderQuestion() : showResult();
 }
 
-async function showResult() {
+function showResult() {
   const count = {};
   answers.forEach(a => count[a] = (count[a] || 0) + 1);
   const final = Object.keys(count).reduce((a,b)=>count[a]>count[b]?a:b);
   const r = results[final];
 
-  if (liff.isInClient()) {
-    await liff.sendMessages([{
-      type: "text",
-      text: `🔮 ผลเกมทำนายอาชีพอนาคตของคุณ\n${r.title}\n\n${r.desc}`
-    }]);
-  }
+  fetch(SHEET_WEBAPP_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({
+      resultCode: final,
+      resultTitle: r.title,
+      resultDesc: r.desc,
+      answers: answers.join(",")
+    })
+  });
 
   document.getElementById("app").innerHTML = `
-    <div class="result-title">${r.title}</div>
-    <div class="result-desc">${r.desc}</div>
+    <div class="content">
+      <div class="result-title">${r.title}</div>
+      <div class="result-desc">${r.desc}</div>
 
-    <div class="actions">
-      <a href="${GOOGLE_FORM_URL}" target="_blank">
-        <button class="option-btn">🎓 รับเกียรติบัตร</button>
-      </a>
-
-      <a href="${FACULTY_PAGE_URL}" target="_blank">
-        <button class="option-btn outline">📘 ไปที่เพจคณะศิลปศาสตร์</button>
-      </a>
-
-      <button class="option-btn secondary" onclick="restart()">🔁 เล่นอีกครั้ง</button>
-      <button class="option-btn danger" onclick="closeLIFF()">⬅️ กลับไปที่ OA</button>
+      <div class="actions">
+        <a href="${GOOGLE_FORM_URL}" target="_blank"><button>🎓 รับเกียรติบัตร</button></a>
+        <a href="${FACULTY_PAGE_URL}" target="_blank"><button class="outline">📘 เพจคณะศิลปศาสตร์</button></a>
+        <button class="secondary" onclick="restart()">🔁 เล่นอีกครั้ง</button>
+        <button class="danger" onclick="closeLIFF()">⬅️ กลับไป OA</button>
+      </div>
     </div>
   `;
 }
@@ -244,24 +254,22 @@ function restart() {
 }
 
 function closeLIFF() {
-  if (liff.isInClient()) {
+  if (window.liff && liff.isInClient()) {
     liff.closeWindow();
+  } else {
+    window.close();
   }
 }
 
-/* ============== LIFF INIT ============== */
-(async function initApp() {
+/* ===== INIT ===== */
+async function initApp() {
   try {
     await liff.init({ liffId: LIFF_ID });
-    if (!liff.isLoggedIn()) {
-      liff.login();
-      return;
-    }
-  } catch (e) {
-    console.warn("LIFF init failed");
-  }
+    if (!liff.isLoggedIn()) liff.login();
+  } catch(e) {}
   renderQuestion();
-})();
+}
+initApp();
 </script>
 
 </body>
