@@ -227,17 +227,14 @@ function closeLIFF() {
   }
 }
 
-/* ============== LIFF INIT (SAFE MODE) ============== */
+<script>
+/* ===== LIFF INIT ===== */
 async function initApp() {
   try {
     await liff.init({ liffId: LIFF_ID });
 
     if (liff.isInClient()) {
-      try {
-        liff.expandWindow();
-      } catch (e) {
-        console.warn("expandWindow failed");
-      }
+      try { liff.expandWindow(); } catch(e){}
     }
 
     if (!liff.isLoggedIn()) {
@@ -249,9 +246,13 @@ async function initApp() {
     console.warn("LIFF init error", err);
   }
 
-  // ✅ โหลดเกมเสมอ ไม่ว่าล็อกอินหรือไม่
+  // ✅ โหลดเกมเสมอ
   renderQuestion();
 }
 
+// ✅ เรียกแค่ครั้งเดียว
 initApp();
+</script>
 
+</body>
+</html>
