@@ -134,7 +134,7 @@ async function showResult() {
     displayName = profile.displayName;
 
     await liff.sendMessages([{ type: "text", text:
-      `🔮 ผลเกมแนะแนวของคุณ\n${r.title}\n\n${r.desc}`
+      `🔮 ผลเกมทำนายอาชีพอนาคตของคุณ\n${r.title}\n\n${r.desc}`
     }]);
   }
 
@@ -147,10 +147,20 @@ async function showResult() {
     answers: answers.join(",")
   };
 
-  navigator.sendBeacon(
-    SHEET_WEBAPP_URL,
-    new Blob([JSON.stringify(payload)], { type: "application/json" })
-  );
+fetch(SHEET_WEBAPP_URL, {
+  method: "POST",
+  headers: {
+    "Content-Type": "text/plain;charset=utf-8"
+  },
+  body: JSON.stringify({
+    userId,
+    displayName,
+    resultCode: final,
+    resultTitle: r.title,
+    resultDesc: r.desc,
+    answers: answers.join(",")
+  })
+});
 
   document.getElementById("app").innerHTML = `
     <h2>${r.title}</h2>
