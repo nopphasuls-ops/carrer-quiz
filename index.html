@@ -141,7 +141,6 @@ function answer(type) {
   current++;
   current < questions.length ? renderQuestion() : showResult();
 }
-
 async function showResult() {
   const count = {};
   answers.forEach(a => count[a] = (count[a] || 0) + 1);
@@ -150,12 +149,53 @@ async function showResult() {
 
   const message = `🔮 ผลเกมแนะแนวของคุณ\n${r.title}\n\n${r.desc}`;
 
-// ส่งผลเข้า LINE (เฉพาะตอนเปิดใน LINE เท่านั้น)
-if (liff.isInClient()) {
-  await liff.sendMessages([
-    { type: "text", text: message }
-  ]);
+  let userId = "";
+  let displayName = "";
+
+  // 🔐 ดึงข้อมูลผู้ใช้ให้ถูกต้อง
+  if (liff.isInClient()) {
+    const profile = await liff.getProfile();
+    userId = profile.userId;
+    displayName = profile.displayName;
+
+    await liff.sendMessages([
+      { type: "text", text: message }
+    ]);
+  } else {
+    userId = "browser-test";
+    displayName = "Browser User";
+  }
+
+  // 📤 ส่งเข้า Google Sheet (รอผลจริง)
+  try {
+    const res = await fetch(SHEET_WEBAPP_URL, {
+      method: "POST",
+      mode: "no-cors", // สำคัญมาก
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId,
+        displayName,
+        resultCode: final,
+        resultTitle: r.title,
+        resultDesc: r.desc,
+        answers: answers.join(",")
+      })
+    });
+  } catch (err) {
+    console.error("Send to Sheet error", err);
+  }
+
+  document.getElementById("app").innerHTML = `
+    <h2>${r.title}</h2>
+    <pre>${r.desc}</pre>
+    <a href="${GOOGLE_FORM_URL}" target="_blank">
+      <button>🎓 คลิกเพื่อรับเกียรติบัตร</button>
+    </a>
+    <button class="secondary" onclick="restart()">🔁 ลองอีกครั้ง</button>
+  `;
 }
+</script>
+
 
 
   // ส่งผลเข้า Google Sheet
