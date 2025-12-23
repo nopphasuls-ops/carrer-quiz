@@ -1,96 +1,128 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
 <title>เกมทำนายสาขาที่ใช่</title>
 
-<!-- LIFF SDK -->
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
 <style>
+:root {
+  --green: #1aa36f;
+  --light: #f5f7fa;
+  --dark: #1f2937;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 html, body {
   margin: 0;
   padding: 0;
   height: 100%;
+  font-family: "Segoe UI", "Prompt", sans-serif;
+  background: var(--light);
+  color: var(--dark);
 }
 
-body {
-  font-family: "Segoe UI", sans-serif;
-  background: #eef2f6;
-}
-
-/* Fullscreen container */
+/* ===== Layout ===== */
 #app {
   min-height: 100vh;
-  padding: 24px;
-  box-sizing: border-box;
-  background: #ffffff;
+  padding: 20px;
 }
 
-/* Typography */
-h2 {
-  font-size: 32px;
-  margin-bottom: 16px;
-}
-h3 {
-  font-size: 26px;
-  margin-bottom: 12px;
-}
-p {
-  font-size: 22px;
-  line-height: 1.6;
+/* ===== Header ===== */
+.header {
+  text-align: center;
   margin-bottom: 20px;
 }
 
-/* Buttons */
-button {
-  width: 100%;
-  padding: 18px;
-  margin-bottom: 14px;
+.header h1 {
+  font-size: 30px;
+  margin: 0 0 6px;
+}
+
+.progress {
   font-size: 20px;
+  color: var(--green);
+  margin-bottom: 10px;
+}
+
+/* ===== Question ===== */
+.question {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+/* ===== Buttons ===== */
+.option-btn {
+  width: 100%;
+  padding: 20px;
+  margin-bottom: 14px;
+  font-size: 22px;
   font-weight: 600;
-  border-radius: 14px;
+  border-radius: 16px;
   border: none;
-  background: #4CAF50;
+  background: var(--green);
   color: #fff;
   cursor: pointer;
 }
 
-button.secondary {
-  background: #607D8B;
-}
-
-button.outline {
-  background: #ffffff;
-  color: #4CAF50;
-  border: 2px solid #4CAF50;
-}
-
-button.danger {
-  background: #f44336;
-}
-
-button:active {
+.option-btn:active {
   transform: scale(0.98);
 }
 
-pre {
-  white-space: pre-wrap;
-  font-size: 20px;
-  line-height: 1.6;
-  background: #f7f9fb;
-  padding: 16px;
-  border-radius: 12px;
+.secondary {
+  background: #607d8b;
 }
 
-.result-actions {
-  margin-top: 24px;
+.outline {
+  background: #ffffff;
+  color: var(--green);
+  border: 2px solid var(--green);
+}
+
+.danger {
+  background: #e53935;
+}
+
+/* ===== Result ===== */
+.result-title {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 16px;
+}
+
+.result-desc {
+  font-size: 22px;
+  line-height: 1.6;
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 18px;
+  margin-bottom: 24px;
+  white-space: pre-wrap;
+}
+
+.actions button {
+  margin-bottom: 14px;
+}
+
+/* ===== Loading ===== */
+.loading {
+  font-size: 24px;
+  text-align: center;
+  margin-top: 40px;
 }
 </style>
 </head>
 
 <body>
-<div id="app">กำลังโหลด…</div>
+
+<div id="app" class="loading">กำลังโหลด...</div>
 
 <script>
 /* ================= CONFIG ================= */
@@ -145,16 +177,25 @@ const results = {
   C: { title: "🤝 คุณคือสายเข้าใจคนและสังคม!",
        desc: "เหมาะกับสาขา:\n• การพัฒนาชุมชน\n• นิเทศศาสตร์และระบบสารสนเทศ" },
   D: { title: "🔬 คุณคือสายวิทย์ตัวจริง!",
-       desc: "เหมาะกับสาขา:\n• ครุศาสตร์\n• เกษตร\n• สัตวศาสตร์" }
+       desc: "เหมาะกับสาขา:\n• ครุศาสตร์ (ไฟฟ้า ฟิสิกส์ เคมี ชีววิทยา)\n• เกษตร\n• สัตวศาสตร์" }
 };
 
-/* ============== GAME ============== */
+/* ============== GAME LOGIC ============== */
 function renderQuestion() {
   const q = questions[current];
-  let html = `<h3>ข้อที่ ${current + 1} จาก ${questions.length}</h3><p>${q.q}</p>`;
+
+  let html = `
+    <div class="header">
+      <div class="progress">ข้อที่ ${current + 1} / ${questions.length}</div>
+    </div>
+
+    <div class="question">${q.q}</div>
+  `;
+
   q.opts.forEach(o => {
-    html += `<button onclick="answer('${o[1]}')">${o[0]}</button>`;
+    html += `<button class="option-btn" onclick="answer('${o[1]}')">${o[0]}</button>`;
   });
+
   document.getElementById("app").innerHTML = html;
 }
 
@@ -170,31 +211,28 @@ async function showResult() {
   const final = Object.keys(count).reduce((a,b)=>count[a]>count[b]?a:b);
   const r = results[final];
 
-  // ส่งข้อความเข้า LINE ถ้าอยู่ใน LINE
-  if (window.liff && liff.isInClient()) {
-    try {
-      await liff.sendMessages([{
-        type: "text",
-        text: `🔮 ผลเกมแนะแนวของคุณ\n${r.title}\n\n${r.desc}`
-      }]);
-    } catch(e){}
+  if (liff.isInClient()) {
+    await liff.sendMessages([{
+      type: "text",
+      text: `🔮 ผลเกมทำนายอาชีพอนาคตของคุณ\n${r.title}\n\n${r.desc}`
+    }]);
   }
 
   document.getElementById("app").innerHTML = `
-    <h2>${r.title}</h2>
-    <pre>${r.desc}</pre>
+    <div class="result-title">${r.title}</div>
+    <div class="result-desc">${r.desc}</div>
 
-    <div class="result-actions">
+    <div class="actions">
       <a href="${GOOGLE_FORM_URL}" target="_blank">
-        <button>🎓 คลิกเพื่อรับเกียรติบัตร</button>
+        <button class="option-btn">🎓 รับเกียรติบัตร</button>
       </a>
 
       <a href="${FACULTY_PAGE_URL}" target="_blank">
-        <button class="outline">📘 ไปที่เพจคณะศิลปศาสตร์</button>
+        <button class="option-btn outline">📘 ไปที่เพจคณะศิลปศาสตร์</button>
       </a>
 
-      <button class="secondary" onclick="restart()">🔁 เล่นอีกครั้ง</button>
-      <button class="danger" onclick="closeLIFF()">⬅️ กลับไปที่ OA</button>
+      <button class="option-btn secondary" onclick="restart()">🔁 เล่นอีกครั้ง</button>
+      <button class="option-btn danger" onclick="closeLIFF()">⬅️ กลับไปที่ OA</button>
     </div>
   `;
 }
@@ -206,39 +244,25 @@ function restart() {
 }
 
 function closeLIFF() {
-  if (window.liff && liff.isInClient()) {
+  if (liff.isInClient()) {
     liff.closeWindow();
-  } else {
-    window.history.back();
   }
 }
 
-/* ============== INIT (NO LOADING HANG) ============== */
-async function initApp() {
-  // ✅ โหลดเกมก่อนเสมอ
-  renderQuestion();
-
-  // ❌ ถ้า LIFF ยังไม่พร้อม → ไม่รอ
-  if (!window.liff) return;
-
+/* ============== LIFF INIT ============== */
+(async function initApp() {
   try {
     await liff.init({ liffId: LIFF_ID });
-
     if (!liff.isLoggedIn()) {
       liff.login();
       return;
     }
-
-    if (liff.isInClient()) {
-      try { liff.expandWindow(); } catch(e){}
-    }
-
-  } catch (err) {
-    console.warn("LIFF error", err);
+  } catch (e) {
+    console.warn("LIFF init failed");
   }
-}
-
-window.onload = initApp;
+  renderQuestion();
+})();
 </script>
+
 </body>
 </html>
